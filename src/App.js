@@ -1,14 +1,13 @@
-import React, {useEffect, useState} from 'react';
-import './App.css';
-import {PeraWalletConnect} from "@perawallet/connect";
-import axios from 'axios';
-import Button from '@mui/material/Button';
+import React, { useEffect, useState } from "react";
+import "./App.css";
+import { PeraWalletConnect } from "@perawallet/connect";
+import axios from "axios";
+import Button from "@mui/material/Button";
 
 // Create the PeraWalletConnect instance outside of the component
 const peraWallet = new PeraWalletConnect();
 
 function App() {
-
   const [accountAddress, setAccountAddress] = useState(null);
   const isConnectedToPeraWallet = !!accountAddress;
 
@@ -24,57 +23,65 @@ function App() {
     });
   }, []);
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState(accountAddress);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const getData = async () => {
       try {
-        let url = 'https://algoindexer.algoexplorerapi.io/v2/accounts/TMHP2YNFRTS4NGY3IPNP7KWYYWF3S3ZUFUWQJJDMYF72THHCPJGCMDGJGI'
-        const response = await axios.get(url);
-        const responseFormatted = await response.data;
-        const responseAccount = responseFormatted['account'];
-        const amountFormatted = (responseAccount.amount/1000000);
-        console.log(amountFormatted)
-        
-        setData(amountFormatted);
-        setError(null);
+        if (isConnectedToPeraWallet) {
+          let url =
+            "https://algoindexer.algoexplorerapi.io/v2/accounts/" +
+            accountAddress;
 
+          const response = await axios.get(url);
+          const responseFormatted = await response.data;
+          const responseAccount = responseFormatted["account"];
+
+          const amountFormatted = responseAccount.amount / 1000000;
+          console.log(amountFormatted);
+
+          setData(amountFormatted);
+          setError(null);
+        }
       } catch (err) {
         setError(err.message);
         setData(null);
-
       } finally {
         setLoading(false);
       }
     };
     getData();
-  }, []);
+  }, [accountAddress, isConnectedToPeraWallet]);
 
   return (
     <main className="App">
-      <Button variant="outlined"
+      <Button
+        variant="outlined"
         onClick={
-          isConnectedToPeraWallet ? handleDisconnectWalletClick : handleConnectWalletClick
-        }>
+          isConnectedToPeraWallet
+            ? handleDisconnectWalletClick
+            : handleConnectWalletClick
+        }
+      >
         {isConnectedToPeraWallet ? "Disconnect" : "Connect to Pera Wallet"}
       </Button>
 
       <div>
-        <h2>{isConnectedToPeraWallet ? `Your Wallet Address is ${accountAddress}` : "Connect First, dummy."}</h2>
+        <h2>
+          {isConnectedToPeraWallet
+            ? `Your Wallet Address is ${accountAddress}`
+            : "Connect first, dummy."}
+        </h2>
         <h3>Algo Balance:</h3>
 
         {loading && <div>A moment please...</div>}
-      {error && (
-        <div>{`There is a problem fetching the post data - ${error}`}</div>
-      )}
+        {error && (
+          <div>{`There is a problem fetching the post data - ${error}`}</div>
+        )}
 
-      {data && (
-        <div>{data}</div>
-      )}
-     
-      
+        <div>{isConnectedToPeraWallet ? `${data}` : " --- "}</div>
       </div>
     </main>
   );
@@ -102,7 +109,6 @@ function App() {
 
     setAccountAddress(null);
   }
-
 }
 
 export default App;
